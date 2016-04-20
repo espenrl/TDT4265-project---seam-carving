@@ -1,0 +1,112 @@
+﻿<Window x:Class="erl.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:erl="clr-namespace:erl"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+        mc:Ignorable="d"
+        Title="Seam carving" Height="768" Width="1024">
+    
+    <Window.DataContext>
+        <erl:MainViewModel />
+    </Window.DataContext>
+    
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="200" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- 1st row -->
+        <TextBlock Grid.Column="0" Grid.Row="0" FontSize="22" Text="Input" />
+        <TextBlock Grid.Column="1" Grid.Row="0" FontSize="22" Text="Bias" />
+        <TextBlock Grid.Column="2" Grid.Row="0" FontSize="22" Text="Energy function" />
+        <TextBlock Grid.Column="3" Grid.Row="0" FontSize="22" Text="Energy function w/bias" />
+
+        <!-- 2nd row: input image with inkcanvas -->
+        <Image x:Name="InputImage" Grid.Column="0" Grid.Row="1" Margin="10" Source="{Binding InputImage}" />
+        <InkCanvas Grid.Column="0" Grid.Row="1" x:Name="InkCanvas" Margin="10" Background="Transparent"
+                   Width="{Binding ElementName=InputImage, Path=ActualWidth}"
+                   Height="{Binding ElementName=InputImage, Path=ActualHeight}">
+
+            <InkCanvas.DefaultDrawingAttributes>
+                <DrawingAttributes Color="Green" Width="5" Height="20" FitToCurve="True" IsHighlighter="True" />
+            </InkCanvas.DefaultDrawingAttributes>
+
+            <InkCanvas.ContextMenu>
+                <ContextMenu DataContext="{Binding Path=PlacementTarget, RelativeSource={RelativeSource Mode=Self}}">
+                    <MenuItem Header="Clear">
+                        <i:Interaction.Triggers>
+                            <i:EventTrigger EventName="Click">
+                                <erl:ClearInkCanvasAction InkCanvas="{Binding BindsDirectlyToSource=True}" />
+                            </i:EventTrigger>
+                        </i:Interaction.Triggers>
+                    </MenuItem>
+                </ContextMenu>
+            </InkCanvas.ContextMenu>
+
+            <i:Interaction.Behaviors>
+                <erl:InkCanvasDrawBehavior />
+            </i:Interaction.Behaviors>
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="StrokeCollected">
+                    <i:InvokeCommandAction Command="{Binding UpdateBiasCommand}" CommandParameter="{Binding ElementName=InkCanvas}" />
+                </i:EventTrigger>
+                <i:EventTrigger EventName="StrokeErased">
+                    <i:InvokeCommandAction Command="{Binding UpdateBiasCommand}" CommandParameter="{Binding ElementName=InkCanvas}" />
+                </i:EventTrigger>
+                <i:EventTrigger EventName="StrokesReplaced">
+                    <i:InvokeCommandAction Command="{Binding UpdateBiasCommand}" CommandParameter="{Binding ElementName=InkCanvas}" />
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+        </InkCanvas>
+        
+        <!-- 2nd row: other -->
+        <Border Grid.Column="1" Grid.Row="1" Margin="10" Background="Gray" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <Image Source="{Binding BiasImage}" />
+        </Border>
+        <Image Grid.Column="2" Grid.Row="1" Margin="10" Source="{Binding EnergyFunctionImage}" />
+        <Image Grid.Column="3" Grid.Row="1" Margin="10" Source="{Binding EnergyFunctionWithBiasImage}" />
+
+        <!-- 3rd row -->
+        <Grid Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="4">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="10" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Orientation="Horizontal">
+                <Button Width="100" Content="Open image" Command="{Binding OpenImageCommand}" />
+                <TextBlock Text="{Binding InputImageInfoStr}" Margin="10,0,0,0" VerticalAlignment="Center"  />
+            </StackPanel>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal">
+                <TextBlock Text="Carve:" Margin="0,0,10,0" />
+                <RadioButton Content="width" IsChecked="{Binding CarveWidth, Mode=TwoWay}" />
+                <RadioButton Content="height" IsChecked="{Binding CarveHeight, Mode=TwoWay}" />
+                <TextBlock Margin="20,0,0,0">
+                    <Run Text="Desired" />
+                    <Run Text="{Binding DimensionName}" />
+                </TextBlock>
+                <TextBox Width="100" Text="{Binding DimensionPixels, Mode=TwoWay}" Margin="10,0" />
+                <Button Width="100" Content="Carve image" Command="{Binding SeamCarveCommand}" />
+            </StackPanel>
+        </Grid>
+
+        <!-- 4th and 5th row -->
+        <TextBlock Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="4" FontSize="22" Text="Seam carved result" />
+        <Image Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="4" Margin="10" Source="{Binding OutputImage}" />
+
+    </Grid>
+</Window>
