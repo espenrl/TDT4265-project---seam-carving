@@ -1,0 +1,1 @@
+# TDT4265-project---seam-carving
